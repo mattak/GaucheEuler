@@ -1,4 +1,4 @@
-#!/usr/bin/gosh
+#!/usr/local/bin/gosh
 
 (load "./util.scm")
 

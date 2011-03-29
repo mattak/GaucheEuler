@@ -93,3 +93,17 @@
     (map fn mat-lb-triangle)
     maxnum))
     
+
+
+;; problem 12. triangle number
+;;---------------------------------
+; 1. make triangle
+; 2. get factor
+
+(define ans12
+;  (last (triangle-numbers 12375)))
+  (let* ((lst (triangle-numbers 13000))
+         (lengthes (map (lambda (x) (length (factors x))) lst))
+         (i 0)
+         (idx (car (with-yield (with-index i (dolist (a lengthes) (if (> a 500) (yield i)) (inc! i)))))))
+    (nth idx lst)))

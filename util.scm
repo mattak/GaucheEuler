@@ -10,10 +10,24 @@
 (define-macro for 
   (lambda (v start test stop . body)
     (let ((gstop (gensym)))
-      `(do ((,v ,start (+ ,v 1))
-            (,gstop ,stop))
-           ((not (,test ,v ,gstop)))
-         ,@body))))
+      `(with-yield
+        (do ((,v ,start (+ ,v 1))
+             (,gstop ,stop))
+            ((not (,test ,v ,gstop)))
+          ,@body)))))
+
+; ~ with yield
+(define-macro (with-yield . body)
+  (let ((acc (gensym)))
+   `(let ((,acc '()))
+      (letrec ((yield (lambda (x)
+                        (push! ,acc x))))
+        ,@body
+        (reverse! ,acc)))))
+
+(define-macro (with-index v . body)
+  `(let ((,v 1))
+     ,@body))
 
 ; ~ not equal
 (define (!= e1 e2)
@@ -34,6 +48,8 @@
 (define (.. start end)
   (... start (- end 1)))
 
+;; list basic operation
+;;-------------------------------------------
 
 ; ~ remove if arglst has the element which was not pass testfn.
 ; > (remove-if odd? '(1 2 3 4 5 6))
@@ -51,18 +67,104 @@
 (define (collection-if testfn arglst :optional (acc '()))
   (remove-if (lambda (x) (not (testfn x))) arglst acc))
 
+; ~ apply function to each list element
+; > (mapeach cons '(1 2 3) '(4 5 6))
+; ->((1 . 4) (1 . 5) (1 . 6) (2 . 4) (2 . 5) (2 . 6) (3 . 4) (3 . 5) (3 . 6))
+(define (mapeach fn lst1 lst2)
+  (let ((retlst '()))
+    (dolist (a1 lst1)
+            (dolist (a2 lst2)
+                    (push! retlst (fn a1 a2))))
+    (reverse! retlst)))
+
+; ~ delete duplicate element in list
+; > (delete-duplicate '( 1 2 3 2 3 1 4 2))
+; ->(1 2 3 4)
+(define (delete-duplicate lst)
+  (let ((retlst '())
+        (tmplst '()))
+    (dolist (a lst)
+            (set! tmplst retlst)
+            (while (and (not (null? tmplst))
+                        (not (eq? a (car tmplst))))
+                   (set! tmplst (cdr tmplst)))
+            (if (null? tmplst)
+                (push! retlst a)))
+    (reverse! retlst)))
+
+; ~ subsequence of list
+; > (subseq '(1 2 3 4) 2 4)
+; -> (3 4)
+(define (subseq lst n1 :optional n2)
+  (if (undefined? n2)
+      (list-tail lst n1)
+      (let ((ll (list-tail lst n1))
+            (llret '()))
+        (dotimes (i (- n2 n1))
+                 (push! llret (car ll))
+                 (set! ll (cdr ll)))
+        (reverse! llret))))
+
+; ~ grouping list
+; > (group '(1 2 3 4 5) 2)
+; ->((1 2) (3 4) (5))
+(define (group arglst n)
+  (if (< n 1) (error "group length must be greater than zero!")
+      (let rec ((m (length arglst)) (lst arglst) (acc '()))
+        (if (<= m n) (reverse! (cons lst acc))
+            (rec (- m n) (list-tail lst n) (cons (subseq lst 0 n) acc))))))
+
+; ~ flatten list
+; > (flatten '((1) (2 (3)) 4 (5 (6 7))))
+; -> (1 2 3 4 5 6 7)
+(define (flatten arglst)
+;  (let ((acc '()))
+;    (letrec ((rec (lambda (lst)
+;                    (if (atom? lst) (push! acc lst)
+;                        (map rec lst)))))
+;      (rec arglst))
+;    (reverse! acc))
+  (letrec ((rec (lambda (x acc)
+                  (cond ((null? x) acc)
+                        ((atom? x) (cons x acc))
+                        (#t (rec (car x) (rec (cdr x) acc)))))))
+    (rec arglst '())))
+
+
+
 ; ~ nth in element
 (define (nth n lst)
-  (let loop ((ln n) (llst lst))
-    (if (<= ln 1)
-        (car llst)
-        (loop (- ln 1) (cdr llst)))))
+;  (let loop ((ln n) (llst lst))
+;    (if (<= ln 1)
+;        (car llst)
+;        (loop (- ln 1) (cdr llst)))))
+  (list-ref lst (- n 1)))
 
-(define (randomint start end)
-  (+ start (modulo (sys-random) (++ (- end start)))))
+(define (last lst)
+  (let ((tmp lst))
+    (until (null? (cdr tmp))
+           (set! tmp (cdr tmp)))
+    (car tmp)))
 
-; ~ power
-; optimizing thanks for python
+; ~ refer matrix
+; > (ref (1 2) '((1 2 3) (4 5 6)))
+; -> 2
+(define (ref idx mat)
+  (if (null? idx)
+      mat
+      (ref (cdr idx) (nth (car idx) mat))))
+
+;; mathmatics
+;;-----------------------------------------------
+; ~ plus one
+(define (++ n)
+  (+ n 1))
+
+; ~ minus one
+(define (-- n)
+  (- n 1))
+
+; ~ count bits
 (define (bits integer)
   (let ((result 0))
     (until (= integer 0)
@@ -70,6 +172,8 @@
            (set! result (++ result)))
     result))
 
+; ~ power and residual powers
+; optimizing thanks for python
 (define (** x n :optional m)
   (let ((iteration (bits n))
         (result 1)
@@ -99,13 +203,78 @@
                (set! e (- e 1)))
         n)))
 
-; ~ plus one
-(define (++ n)
-  (+ n 1))
+; ~ generate random integer
+; > (randomint 10 15)
+; -> 15
+(define (randomint start end)
+  (+ start (modulo (sys-random) (++ (- end start)))))
 
-; ~ minus one
-(define (-- n)
-  (- n 1))
+; ~ convert number to list
+; > (number->list 12345)
+; ->(1 2 3 4 5)
+(define (number->list n)
+  (let ((lst '()))
+    (while (> n 0)
+           (push! lst (mod n 10))
+           (set! n (floor (/ n 10))))
+    lst))
+
+; ~ convert list to number
+; > (list->number '(1 2 3 4 5))
+; ->12345
+(define (list->number lst)
+  (let ((n 0))
+    (until (null? lst)
+            (set! n (+ (* n 10) (car lst)))
+            (set! lst (cdr lst)))
+    n))
+
+; ~ is palindromic number?
+; > (collection-if palindromic? (.. 100 300))
+; -> (101 111 121 131 141 151 161 171 181 191 202 212 222 232 242 252 262 272 282 292)
+(define (palindromic? x)
+  (let ((lst '()))
+    (while (> x 0)
+           (push! lst (mod x 10))
+           (set! x (floor (/ x 10))))
+    (equal? lst (reverse lst))))
+
+; ~ factor of number
+(define (factors n)
+  (let ((i 1)
+        (ps (primes n))
+        (pre 0)
+        (tmp '(1)))
+;    (for i 1 <= n
+;         (if (= (mod n i) 0)
+;             (yield i)))))
+    (seq-apply 
+     (lambda (x y) (mapeach * x y))
+     (with-yield
+      (until (null? ps)
+             (if (!= pre (car ps))
+                 (begin
+                   (yield (reverse tmp))
+                   (set! tmp '(1))))
+             (set! pre (car ps))
+             (push! tmp (* (car tmp) pre))
+             (set! ps (cdr ps)))
+      (yield (reverse tmp))))))
+
+(define (seq-apply fn rest)
+  (let ((result (car rest))
+        (lst (cdr rest)))
+    (until (null? lst)
+           (set! result (fn result (car lst)))
+           (set! lst (cdr lst)))
+    result))
+
+(define (triangle-numbers n)
+  (let ((sum 0)
+        (i 0))
+     (for i 1 <= n
+          (set! sum (+ sum i))
+          (yield sum))))
 
 ; ~ prime numbers
 ; > (primes 12)
@@ -122,37 +291,6 @@
     (reverse! lst)))
 
 
-; ~ is palindromic number?
-; > (collection-if palindromic? (.. 100 300))
-; -> (101 111 121 131 141 151 161 171 181 191 202 212 222 232 242 252 262 272 282 292)
-(define (palindromic? x)
-  (let ((lst '()))
-    (while (> x 0)
-           (push! lst (mod x 10))
-           (set! x (floor (/ x 10))))
-    (equal? lst (reverse lst))))
-
-           
-(define (mapeach fn lst1 lst2)
-  (let ((retlst '()))
-    (dolist (a1 lst1)
-            (dolist (a2 lst2)
-                    (push! retlst (fn a1 a2))))
-    (reverse! retlst)))
-
-
-(define (delete-duplicate lst)
-  (let ((retlst '())
-        (tmplst '()))
-    (dolist (a lst)
-            (set! tmplst retlst)
-            (while (and (not (null? tmplst))
-                        (not (eq? a (car tmplst))))
-                   (set! tmplst (cdr tmplst)))
-            (if (null? tmplst)
-                (push! retlst a)))
-    (reverse! retlst)))
-
 (define (eratosthenes nlst)
   (let loop ((primes '()) (lst nlst))
     (if (null? lst)
@@ -160,30 +298,6 @@
         (loop (cons (car lst) primes)
               (remove-if (lambda (x) (= (mod x (car lst)) 0))
                          (cdr lst))))))
-
-(define (number->list n)
-  (let ((lst '()))
-    (while (> n 0)
-           (push! lst (mod n 10))
-           (set! n (floor (/ n 10))))
-    lst))
-
-(define (list->number lst)
-  (let ((n 0))
-    (until (null? lst)
-            (set! n (+ (* n 10) (car lst)))
-            (set! lst (cdr lst)))
-    n))
-
-(define (subseq lst n1 :optional n2)
-  (if (undefined? n2)
-      (list-tail lst n1)
-      (let ((ll (list-tail lst n1))
-            (llret '()))
-        (dotimes (i (- n2 n1))
-                 (push! llret (car ll))
-                 (set! ll (cdr ll)))
-        (reverse! llret))))
 
 ; fermertest
 (define (mayprime? q :optional (k 100))
@@ -236,3 +350,5 @@
                      (if (and (!= y (-- q)) (= (logand t 1) 0))
                          (set! ok? #f)))
               ok?))))
+
+
