@@ -110,7 +110,7 @@
 
 
 ;; problem 13. first 10 digit
-
+;;----------------------------
 (define ans13
   (let* ((numlines '(37107287533902102798797998220837590246510135740250
 	     46376937677490009712648124896970078050417018260538
@@ -214,4 +214,24 @@
 	     53503534226472524250874054075591789781264330331690))
 	(nlst (map list->number (map number->list numlines))))
     (list->number (subseq (number->list (apply + nlst)) 0 10))))
+
+;; problem 14.
+;;-------------------------------------------
+; n -> n/2 (n is even)
+; n -> 3n + 1 (n is odd)
+; ex. 13 -> 40 -> 20 -> 10 -> 5 -> 16 -> 8 -> 4 -> 2 -> 2 -> 1
+(define ans14 
+  (let* ((fn (lambda (x)
+	     (if (even? x)
+	         (/ x 2)
+	         (++ (* 3 x)))))
+         (seqfn (lambda (x)
+	        (let ((n 1))
+	             (while (> x 1)
+		    (set! x (fn x))
+		    (inc! n))
+	             n)))
+         (memoseqfn (memoize seqfn)))
+    (cadr (apply max&index (map seqfn (... 1 1000000))))))
+
 

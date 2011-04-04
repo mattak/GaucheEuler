@@ -154,6 +154,18 @@
       mat
       (ref (cdr idx) (nth (car idx) mat))))
 
+; ~ memomize function
+(define (memoize fn)
+  (let ((cache '()))
+    (lambda args
+      (let ((hit (assoc args cache)))
+	(if hit 
+	    (cdr hit)
+	    (let ((result (apply fn args)))
+	      (set! cache (cons (cons args result) cache))
+	      result))))))
+
+
 ;; mathmatics
 ;;-----------------------------------------------
 ; ~ plus one
@@ -350,5 +362,25 @@
                      (if (and (!= y (-- q)) (= (logand t 1) 0))
                          (set! ok? #f)))
               ok?))))
+
+(define (max&index . args)
+  (let ((i 1)
+        (maxidx 0)
+        (maxit (car args)))
+    (dolist (a args)
+            (if (> a  maxit)
+	(begin (set! maxit a)
+	       (set! maxidx i)))
+           (inc! i))
+    (list maxit maxidx)))
+
+
+
+
+
+
+
+
+
 
 
