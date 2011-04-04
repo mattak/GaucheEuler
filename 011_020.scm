@@ -240,3 +240,78 @@
 (define ans15
   (comb 40 20))
 
+
+;; problem 16. 2^1000
+;;-------------------------------------------
+(define ans16
+  (apply + (number->list (** 2 1000))))
+
+;; problem 17. count letters
+;;-------------------------------------------
+(define ans17
+  (let* ((letters '((1 . 3) ; one
+	    (2 . 3) ; two
+	    (3 . 5) ; three
+	    (4 . 4) ; four
+	    (5 . 4) ; five
+	    (6 . 3) ; six
+	    (7 . 5) ; seven
+	    (8 . 5) ; eight
+	    (9 . 4) ; nine
+	    (10 . 3) ; ten
+	    (11 . 6) ; eleven
+	    (12 . 6) ; twelve
+	    (13 . 8) ; thirteen
+	    (14 . 8) ; fourteen
+	    (15 . 7) ; fifteen
+	    (16 . 7) ; sixteen
+	    (17 . 9) ; seventeen
+	    (18 . 8) ; eighteen
+	    (19 . 8) ; nineteen
+	    (20 . 6) ; twenty
+	    (30 . 6) ; thirty
+	    (40 . 5) ; forty
+	    (50 . 5) ; fifty
+	    (60 . 5) ; sixty
+	    (70 . 7) ; seventy
+	    (80 . 6) ; eighty
+	    (90 . 6) ; ninety
+	    (100 . 7) ; hundred
+	    (1000 . 8))) ; thousand
+        (key (lambda (x pairs) (car (assoc x pairs))))
+        (val (lambda (x pairs) (aif (assoc x pairs)
+		    (cdr it)
+		    it)))
+        (cntletters (lambda (x)
+          (letrec ((cntlet (lambda (x)
+	      (let ((lstnums (number->list x)))
+		(cond ((= x 0) 0)
+		      ((= x 1000) (+ (val (car lstnums) letters) (val 1000 letters)))
+		      ((= (modulo x 100) 0) (+ (val (car lstnums) letters) (val 100 letters)))
+		      ((val x letters) (val x letters))
+		      ((< x 100)
+		       (+ (val (* (car lstnums) 10) letters)
+		          (val (cadr lstnums) letters)))
+		      ((< x 1000) (+ (val (car lstnums) letters) 7 3
+			     (cntlet (list->number (cdr lstnums)))))
+		      (#t 0))))))
+	    (cntlet x)))))
+    (apply + (map cntletters (... 1 1000)))))
+
+
+;(define (cntletters x)
+;          (letrec ((cntlet (lambda (x)
+;	      (let ((lstnums (number->list x)))
+;		(cond ((= x 0) 0)
+;		      ((= x 1000) (+ (val (car lstnums) letters) (val 1000 letters)))
+;		      ((= (modulo x 100) 0) (+ (val (car lstnums) letters) (val 100 letters)))
+;		      ((val x letters) (val x letters))
+;		      ((< x 100)
+;		       (+ (val (* (car lstnums) 10) letters)
+;		          (val (cadr lstnums) letters)))
+;		      ((< x 1000) (+ (val (car lstnums) letters) 7 3
+;			     (cntlet (list->number (cdr lstnums)))))
+;		      (#t 0))))))
+;	    (cntlet x)))
+
+

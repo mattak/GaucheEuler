@@ -29,6 +29,13 @@
   `(let ((,v 1))
      ,@body))
 
+
+(define-macro (aif if-state then-state :optional else-state)
+  `(let ((it ,if-state))
+     (if it
+         ,then-state
+         ,else-state)))
+
 ; ~ not equal
 (define (!= e1 e2)
   (not (= e1 e2)))
