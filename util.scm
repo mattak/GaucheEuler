@@ -215,7 +215,7 @@
 (define (number->list n)
   (let ((lst '()))
     (while (> n 0)
-           (push! lst (mod n 10))
+           (push! lst (modulo n 10))
            (set! n (floor (/ n 10))))
     lst))
 
