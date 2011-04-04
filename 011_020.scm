@@ -235,3 +235,8 @@
     (cadr (apply max&index (map seqfn (... 1 1000000))))))
 
 
+;; problem 15. combination
+;;-------------------------------------------
+(define ans15
+  (comb 40 20))
+

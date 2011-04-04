@@ -363,9 +363,12 @@
                          (set! ok? #f)))
               ok?))))
 
+; ~ max value and its index
+; > (max&index 4 0 2)
+; ->(4 1)
 (define (max&index . args)
   (let ((i 1)
-        (maxidx 0)
+        (maxidx 1)
         (maxit (car args)))
     (dolist (a args)
             (if (> a  maxit)
@@ -374,7 +377,13 @@
            (inc! i))
     (list maxit maxidx)))
 
+; ~ permitation
+(define (perm n k)
+  (apply * (... (++ (- n k)) n)))
 
+; ~ combination
+(define (comb n k)
+  (/ (perm n k) (! k)))
 
 
 
