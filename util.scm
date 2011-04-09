@@ -36,6 +36,58 @@
          ,then-state
          ,else-state)))
 
+(define-syntax labels
+  (syntax-rules ()
+    [(_ ((name (var ...)
+               proc-body ...) ...)
+        body ...)
+     (letrec
+         ((name (lambda (var ...)
+                  proc-body ...)) ...)
+          body ...)]))
+
+; CL
+;(defmacro dolists (pairs &body body)
+;  (let ((parms (mapcar (lambda (x) (declare (ignore x)) (gensym)) pairs))
+;        (f (gensym)))
+;    `(labels ((,f ,parms
+;                  (when (or ,@parms)
+;                        (let ,(mapcar (lambda (p g)
+;                                        (list (car p) `(car ,g)))
+;                                      pairs
+;                                      parms)
+;                          ,@body
+;                          (,f ,@(mapcar (lambda (p) `(cdr ,p)) parms))))))
+;             (,f ,@(mapcar #'second pairs)))))
+
+(define-macro (dolists pairs . body)
+  (let ((f (gensym))
+        (parms (map (lambda (x) (gensym)) pairs)))
+    `(labels ((,f ,parms
+                  (when (or ,@(map (lambda (x) (list 'not (list 'eq? x '()))) parms))
+                        (let ,(map (lambda (p g)
+                                     (list (car p) `(car ,g)))
+                                   pairs
+                                   parms)
+                          ,@body
+                          (,f ,@(map (lambda (p) `(cdr ,p)) parms))))))
+             (,f ,@(map cadr pairs)))))
+
+;(define-syntax for
+;  (syntax-rules (by)
+;    [(for (i init limit by step) expr ...)
+;     (do ((tlimit limit)
+;          (i init (+ i step)))
+;         ((> i tlimit))
+;       expr ...)]
+;    [(for (i init limit) expr ...)
+;     (do ((tlimit limit)
+;          (i init (+ i 1)))
+;         ((> i tlimit))
+;       expr ...)]))
+
+
+
 ; ~ not equal
 (define (!= e1 e2)
   (not (= e1 e2)))
@@ -259,6 +311,8 @@
     (equal? lst (reverse lst))))
 
 ; ~ factor of number
+; > (factors 12)
+; -> (1 3 2 6 4 12)
 (define (factors n)
   (let ((i 1)
         (ps (primes n))
@@ -280,6 +334,9 @@
              (set! ps (cdr ps)))
       (yield (reverse tmp))))))
 
+; ~ store result in sequence
+; > (seq-apply (lambda (x y) (mapeach * x y)) '((1 2 4) (1 3 9) (1 5)))
+; ->(1 5 3 15 9 45 2 10 6 30 18 90 4 20 12 60 36 180)
 (define (seq-apply fn rest)
   (let ((result (car rest))
         (lst (cdr rest)))
@@ -287,6 +344,13 @@
            (set! result (fn result (car lst)))
            (set! lst (cdr lst)))
     result))
+
+; ~ amicable numbers
+; > (amicable (amicable 220))
+; -> 220
+(define (amicable n)
+  (- (apply + (factors n)) n))
+
 
 (define (triangle-numbers n)
   (let ((sum 0)
