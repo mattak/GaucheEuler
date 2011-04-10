@@ -225,6 +225,15 @@
 	      result))))))
 
 
+;; algorithm
+;;-----------------------------------------------
+; ~ binary search
+(define (binary-search arr v fn-ref fn-set fn-cmp fn-length)
+  (let ((end (fn-length arr))
+        (start 1)
+        (half ))
+    
+
 ;; mathmatics
 ;;-----------------------------------------------
 ; ~ plus one
