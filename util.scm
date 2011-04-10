@@ -225,6 +225,31 @@
 	      result))))))
 
 
+;; algorithm
+;;-----------------------------------------------
+; ~ binary search
+;(use gauche.uvector)
+(define (binary-search arr v fn-ref fn-length fn-cmp)
+  (let* ((end (-- (fn-length arr)))
+         (start 0)
+         (half (/ (- end start) 2))
+         (t 0)
+         (finded #f))
+    (while (and (not finded) (<= start end))
+           (set! half (floor (/ (+ end start) 2)))
+           (set! t (fn-cmp v (fn-ref arr half)))
+           ;(print (list start end half t (fn-ref arr half)))
+           (cond ((= t 0)
+                  (set! finded #t)) 
+                 ((> t 0)
+                  (set! start (++ half)))
+                 ((< t 0)
+                  (set! end (-- half)))))
+    (if finded
+        half
+        #f)))
+
+
 ;; mathmatics
 ;;-----------------------------------------------
 ; ~ plus one
