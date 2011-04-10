@@ -74,3 +74,8 @@
     (apply + nums)))
 
 
+;; problem 24. permitaion number
+;;--------------------------------
+(define ans24
+  (list->number (nth-perm (... 0 9) (-- 1000000))))
+

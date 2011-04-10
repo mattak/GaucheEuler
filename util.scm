@@ -228,6 +228,10 @@
 ;; algorithm
 ;;-----------------------------------------------
 ; ~ binary search
+; > (binary-search (list->u32vector '(1 2 3 4)) 4 u32vector-ref u32vector-length (lambda (x y) (- x y)))
+; ->3
+; > (binary-search (list->u32vector '(1 2 3 4)) -1 u32vector-ref u32vector-length (lambda (x y) (- x y)))
+; ->#f
 ;(use gauche.uvector)
 (define (binary-search arr v fn-ref fn-length fn-cmp)
   (let* ((end (-- (fn-length arr)))
@@ -484,9 +488,37 @@
 (define (comb n k)
   (/ (perm n k) (! k)))
 
+; ~ nth perm - it begin from index 0 to nPn - 1
+; > (nth-perm (... 0 3) 1)
+; ->(0 1 3 2)
+(define (nth-perm lst n)
+  (let ((i n)
+        (t 0)
+        (order (length lst))
+        (tlst lst)
+        (result '())
+        (tmp 0))
+    (if (or (< n 0)
+            (>= n (perm order order)))
+        #f
+        (begin
+          (while (> order 1)
+                 (set! order (-- order))
+                 (set! tmp (perm order order))
+                 (set! t (floor (/ i tmp)))
+                 (set! i (- i (* tmp t)))
+                                        ; pick up 
+                 (push! result (list-ref tlst t))
+                 (set! tlst (append (subseq tlst 0 t) (list-tail tlst (++ t)))))
+          (push! result (car tlst))
+          (reverse! result)))))
+
 
 ;; mathmatics -- set theory
 ;;---------------------------------
+; ~ different set
+; > (complement-set (... 1 9) (... 2 4))
+; ->(1 5 6 7 8 9)
 (define (complement-set set1 set2)
   (let ((none #t))
     (with-yield
