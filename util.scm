@@ -513,6 +513,22 @@
           (push! result (car tlst))
           (reverse! result)))))
 
+(define (fib n)
+  (if (<= n 2)
+      1
+      (let ((a1 1)
+            (a2 1)
+            (tmp 0)
+            (t (- n 2)))
+        (while (> t 0)
+               (set! tmp a2)
+               (set! a2 (+ a2 a1))
+               (set! a1 tmp)
+               (set! t (-- t)))
+        a2)))
+
+(define (fraction-recurring n)
+  )
 
 ;; mathmatics -- set theory
 ;;---------------------------------

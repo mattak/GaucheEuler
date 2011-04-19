@@ -79,3 +79,13 @@
 (define ans24
   (list->number (nth-perm (... 0 9) (-- 1000000))))
 
+;; problem 25. fibonatti sequence
+;;--------------------------------------
+(define ans25
+  (let ((i 1))
+    (while (< (length (number->list (fib i))) 1000)
+           (set! i (++ i)))
+    i))
+
+
+;; problem 26. 
