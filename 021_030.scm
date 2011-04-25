@@ -88,4 +88,30 @@
     i))
 
 
-;; problem 26. 
+;; problem 26. unit fraction
+;;--------------------------------------
+; n/m
+(define (recur n m :optional (k 1000))
+  (let ((i 0)
+        (restlst '())
+        (result '()))
+    (while (and (< i k) (!= n 0))
+           (if (>= n m)
+               (push! result (floor->exact (/ n m)))
+               (push! result 0))
+           (set! n (mod n m))
+           (push! restlst n)
+           (set! n (* 10 n))
+           (awhen (member-index (car restlst) (cdr restlst))
+                  (set! result 
+                        (cons (reverse (subseq result 0 (++ it))) 
+                                       (list-tail result (++ it))))
+                  (set! n 0))
+           (set! i (+ i 1)))
+    (reverse! result)))
+
+(define ans26
+  )
+
+
+

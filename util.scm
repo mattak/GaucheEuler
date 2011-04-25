@@ -36,6 +36,11 @@
          ,then-state
          ,else-state)))
 
+(define-macro (awhen if-state . body)
+  `(let ((it ,if-state))
+     (when ,if-state
+           ,@body)))
+
 (define-syntax labels
   (syntax-rules ()
     [(_ ((name (var ...)
@@ -60,18 +65,24 @@
 ;                          (,f ,@(mapcar (lambda (p) `(cdr ,p)) parms))))))
 ;             (,f ,@(mapcar #'second pairs)))))
 
-(define-macro (dolists pairs . body)
-  (let ((f (gensym))
-        (parms (map (lambda (x) (gensym)) pairs)))
-    `(labels ((,f ,parms
-                  (when (or ,@(map (lambda (x) (list 'not (list 'eq? x '()))) parms))
-                        (let ,(map (lambda (p g)
-                                     (list (car p) `(car ,g)))
-                                   pairs
-                                   parms)
-                          ,@body
-                          (,f ,@(map (lambda (p) `(cdr ,p)) parms))))))
-             (,f ,@(map cadr pairs)))))
+(define-syntax dolists
+  (syntax-rules ()
+    [(_ ((var lis) ...)
+        proc-body ...)
+     (for-each (lambda (var ...) proc-body ...) lis ...)]))
+
+;(define-macro (dolists pairs . body)
+;  (let ((f (gensym))
+;        (parms (map (lambda (x) (gensym)) pairs)))
+;    `(labels ((,f ,parms
+;                  (when (or ,@(map (lambda (x) (list 'not (list 'eq? x '()))) parms))
+;                        (let ,(map (lambda (p g)
+;                                     (list (car p) `(car ,g)))
+;                                   pairs
+;                                   parms)
+;                          ,@body
+;                          (,f ,@(map (lambda (p) `(cdr ,p)) parms))))))
+;             (,f ,@(map cadr pairs)))))
 
 ;(define-syntax for
 ;  (syntax-rules (by)
@@ -86,6 +97,11 @@
 ;         ((> i tlimit))
 ;       expr ...)]))
 
+(define-macro (dolist-with-index i a lst . body)
+  `(let ((,i 0))
+     (dolist (,a ,lst)
+             ,@body
+             (set! ,i (+ ,i 1)))))
 
 
 ; ~ not equal
@@ -224,6 +240,23 @@
 	      (set! cache (cons (cons args result) cache))
 	      result))))))
 
+(define (member-index e lst :optional (test eq?))
+  (if (null? lst)
+      (values #f '())
+      (let ((a (car lst))
+            (retlst #f)
+            (index 0))
+        (until (null? lst)
+               (if (test e (car lst))
+                   (begin
+                     (set! retlst lst)
+                     (set! lst '()))
+                   (begin
+                     (set! index (++ index))
+                     (set! lst (cdr lst)))))
+        (if (eq? #f retlst)
+            (values #f '())
+            (values index retlst)))))
 
 ;; algorithm
 ;;-----------------------------------------------
@@ -527,8 +560,9 @@
                (set! t (-- t)))
         a2)))
 
-(define (fraction-recurring n)
-  )
+;(define (fraction-recurring n)
+;  (let (())
+;    ))
 
 ;; mathmatics -- set theory
 ;;---------------------------------
