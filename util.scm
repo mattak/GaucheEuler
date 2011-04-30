@@ -496,6 +496,35 @@
                          (set! ok? #f)))
               ok?))))
 
+
+; ~ calculate fraction list. last list mean recurring cycle in its fraction part.
+; >(fraction-recur 1 13)
+; ->(0 (0 7 6 9 2 3))
+; >(fraction-recur 1 6)
+; ->(0 1 (6))
+; >(fraction-recur 1 8)
+; ->(0 1 2 5)
+(define (fraction-recur n m :optional (k 100))
+  (let ((i 0)
+        (restlst '())
+        (result '()))
+    (while (and (< i k) (!= n 0))
+           (if (>= n m)
+               (push! result (floor->exact (/ n m)))
+               (push! result 0))
+           (set! n (mod n m))
+           (push! restlst n)
+           (set! n (* 10 n))
+           (awhen (member-index (car restlst) (cdr restlst))
+                  (set! result 
+                        (cons (reverse (subseq result 0 (++ it))) 
+                                       (list-tail result (++ it))))
+                  (set! n 0))
+           (set! i (+ i 1)))
+    (if (< i k)
+        (reverse! result)
+        #f)))
+
 ; ~ max value and its index
 ; > (max&index 4 0 2)
 ; ->(4 1)

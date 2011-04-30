@@ -91,7 +91,7 @@
 ;; problem 26. unit fraction
 ;;--------------------------------------
 ; n/m
-(define (recur n m :optional (k 1000))
+(define (fraction-recur n m :optional (k 100))
   (let ((i 0)
         (restlst '())
         (result '()))
@@ -108,10 +108,19 @@
                                        (list-tail result (++ it))))
                   (set! n 0))
            (set! i (+ i 1)))
-    (reverse! result)))
+    (if (< i k)
+        (reverse! result)
+        #f)))
 
 (define ans26
-  )
+  (let ((k 900)
+        (presearch '())
+        (search (... 2 1000)))
+    (until (null? search)
+           (set! k (+ k 10))
+           (set! presearch search)
+           (set! search (remove-if (lambda (x) (fraction-recur 1 x k)) search)))
+    (last presearch)))
 
 
 
